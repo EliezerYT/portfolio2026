@@ -2860,7 +2860,12 @@
         `;
       } else {
         const currentImgSrc = images[activeMediaIndex] || images[0];
-        mediaContainer.innerHTML = `
+        const currentIsVideo = isLocalVideoMedia(currentImgSrc);
+        mediaContainer.innerHTML = currentIsVideo ? `
+          <div class="aspect-16-9 w-full rounded-xl overflow-hidden bg-black shadow-inner">
+            <video src="${currentImgSrc}" title="${String(selectedProject.title || 'Video de galería').replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" class="w-full h-full object-contain" controls playsinline preload="metadata"></video>
+          </div>
+        ` : `
           <div class="relative aspect-16-9 w-full rounded-xl overflow-hidden bg-black/60 shadow-inner group">
             <img
               src="${currentImgSrc}"
@@ -2868,24 +2873,19 @@
               class="w-full h-full object-cover object-center transition-all duration-300"
               onerror="this.src='./assets/images/ely/my-avatar.png'"
             />
-            
             ${images.length > 1 ? `
               <button
                 type="button"
                 onclick="window.ElyPortfolio.cycleModalImage(-1)"
                 class="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white text-sm transition-all"
-                title="Foto anterior"
-              >
-                ◀
-              </button>
+                title="Multimedia anterior"
+              >◀</button>
               <button
                 type="button"
                 onclick="window.ElyPortfolio.cycleModalImage(1)"
                 class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white text-sm transition-all"
-                title="Siguiente foto"
-              >
-                ▶
-              </button>
+                title="Siguiente multimedia"
+              >▶</button>
             ` : ''}
           </div>
         `;
@@ -2899,13 +2899,17 @@
       if (activeMediaMode === 'image' && images.length > 1) {
         thumbsContainer.innerHTML = images.map(function (src, idx) {
           const isActive = idx === activeMediaIndex;
+          const isVideo = isLocalVideoMedia(src);
           return `
             <button
               type="button"
               onclick="window.ElyPortfolio.selectModalImage(${idx})"
-              class="h-16 w-24 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${isActive ? 'border-amber-400 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}"
+              aria-label="${isVideo ? 'Reproducir video' : 'Ver imagen'} ${idx + 1}"
+              class="relative h-16 w-24 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${isActive ? 'border-amber-400 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}"
             >
-              <img src="${src}" class="w-full h-full object-cover" onerror="this.src='./assets/images/ely/my-avatar.png'" />
+              ${isVideo
+                ? '<span class="flex w-full h-full items-center justify-center bg-slate-900 text-white text-2xl">▶<span class="absolute bottom-1 right-1 rounded bg-black/70 px-1 text-[9px] font-bold">VIDEO</span></span>'
+                : '<img src="' + src + '" class="w-full h-full object-cover" onerror="this.src=\'./assets/images/ely/my-avatar.png\'" />'}
             </button>
           `;
         }).join('');
