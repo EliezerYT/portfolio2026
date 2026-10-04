@@ -2827,7 +2827,7 @@
               onclick="window.ElyPortfolio.setModalMediaMode('image')"
               class="px-3 py-1 rounded-lg text-xs font-bold transition-all ${activeMediaMode === 'image' ? 'bg-amber-400 text-black shadow' : 'bg-white/10 text-slate-300 hover:bg-white/20'}"
             >
-              📷 Galería de Fotos (${images.length})
+              📷 Galería multimedia (${images.length})
             </button>
           </div>
         `;
@@ -2953,6 +2953,7 @@
 
   function selectModalImage(index) {
     activeMediaIndex = index;
+    activeMediaMode = 'image';
     renderModalMediaViewer();
   }
 
