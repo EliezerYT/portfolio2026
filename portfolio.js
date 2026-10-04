@@ -55,9 +55,9 @@
       year: '2024 - 2025',
       role: 'Lead Game Designer & Programador Principal',
       featured: true,
-      coverImage: './assets/images/ely/overdrivers-teaser.jpg',
+      coverImage: './assets/images/ely/Proyectos/Overdrivers/od1.jpg',
       galleryImages: [
-        './assets/images/ely/overdrivers-teaser.jpg',
+        './assets/images/ely/Proyectos/Overdrivers/od1.jpg',
         './assets/images/ely/my-avatar.png'
       ],
       youtubeVideo: 'https://www.youtube.com/watch?v=PH6cK45nkto',
@@ -887,6 +887,7 @@
 
   // Códigos de Feedback: la única fuente es Google Sheets.
   let feedbackCodes = [];
+  let contactMessages = [];
   let assets = [];
 
   try {
@@ -1274,8 +1275,10 @@
   function getFilteredProjects() {
     if (selectedOrigin === 'assets') return [];
     return projects.filter(function (project) {
-      if (selectedOrigin === 'todos') {
-        if (project.origin === 'servicios' || project.origin === 'clases') {
+      if (selectedOrigin === 'more') {
+        if (project.origin !== 'more') return false;
+      } else if (selectedOrigin === 'todos') {
+        if (project.origin === 'servicios' || project.origin === 'clases' || project.origin === 'more') {
           return false;
         }
       } else if (project.origin !== selectedOrigin) {
@@ -1330,7 +1333,7 @@
     const assetCategoryFilters = document.querySelectorAll('.asset-category-filter');
     const normalCategoryFilters = document.querySelectorAll('.normal-category-filter');
     if (secondaryFilters) {
-      if (selectedOrigin === 'servicios' || selectedOrigin === 'clases') {
+      if (selectedOrigin === 'servicios' || selectedOrigin === 'clases' || selectedOrigin === 'more') {
         secondaryFilters.classList.add('hidden');
       } else {
         secondaryFilters.classList.remove('hidden');
@@ -1345,7 +1348,7 @@
       const count = selectedOrigin === 'assets'
         ? getFilteredAssets().length
         : filteredProjects.length;
-      const total = selectedOrigin === 'assets' ? assets.length : projects.length;
+      const total = selectedOrigin === 'assets' ? assets.length : projects.filter(function(p) { return p.origin !== 'more'; }).length;
       countDisplay.textContent = 'Mostrando ' + count + ' de ' + total + ' elementos';
     }
 
@@ -1354,6 +1357,8 @@
         selectedOrigin === 'assets' ? 'Biblioteca de Scripts / Assets' :
         selectedOrigin === 'servicios' ? 'Catálogo de Servicios Comunes' :
         selectedOrigin === 'clases' ? 'Clases Privadas Personalizadas' :
+        selectedOrigin === 'more' ? 'Sistemas & Desarrollo' :
+        selectedOrigin === 'more' ? 'Sistemas & Desarrollo' :
         selectedOrigin === 'propio' ? 'Proyectos Propios (Indie)' :
         selectedOrigin === 'trabajado' ? 'Proyectos Trabajados para Clientes' :
         'Catálogo de Proyectos (Todos)';
@@ -1364,6 +1369,8 @@
         selectedOrigin === 'assets' ? 'ElyDev Community' :
         selectedOrigin === 'servicios' ? 'Servicios Técnicos Especializados' :
         selectedOrigin === 'clases' ? 'Clases & Asesorías Privadas' :
+        selectedOrigin === 'more' ? 'Sistemas en Desarrollo' :
+        selectedOrigin === 'more' ? 'Sistemas en Desarrollo' :
         'Proyectos Trabajados & Propios';
     }
 
@@ -1372,6 +1379,8 @@
         selectedOrigin === 'assets' ? 'Scripts, Assets y herramientas de la comunidad. Busca, guarda y descarga.' :
         selectedOrigin === 'servicios' ? 'Sistemas llave en mano de monetización publicitaria, compras in-app, audio y multiplayer.' :
         selectedOrigin === 'clases' ? 'Aprende Unity, programación C#, monetización y multijugador online con sesiones 1 a 1 en vivo.' :
+        selectedOrigin === 'more' ? 'Videos cortos, demostraciones y etiquetas de sistemas desarrollados por ElyDev.' :
+        selectedOrigin === 'more' ? 'Videos cortos, demostraciones y etiquetas de sistemas desarrollados por ElyDev.' :
         'Filtra por Propios, Trabajados o explora Servicios Comunes y Clases Privadas.';
     }
 
@@ -1610,26 +1619,35 @@
     return params.has('assets') || params.get('page') === 'assets' || (window.location.hash || '').toLowerCase() === '#assets';
   }
 
+  function isMoreRoute() {
+    const params = new URLSearchParams(window.location.search || '');
+    return params.has('more') || params.get('page') === 'more';
+  }
+
   function isAssetsPage() {
     return !!(document.body && document.body.getAttribute('data-page') === 'assets') || isAssetsRoute();
   }
 
   function applyAssetsRouteUI() {
     const assetsRoute = isAssetsRoute();
-    if (document.body) document.body.setAttribute('data-page', assetsRoute ? 'assets' : 'portfolio');
+    const moreRoute = !assetsRoute && isMoreRoute();
+    const specialRoute = assetsRoute || moreRoute;
+    if (document.body) document.body.setAttribute('data-page', assetsRoute ? 'assets' : moreRoute ? 'more' : 'portfolio');
     const projectSection = document.getElementById('proyectos');
     if (!projectSection) return;
 
     document.querySelectorAll('main > section').forEach(function (section) {
-      section.classList.toggle('hidden', assetsRoute && section !== projectSection);
+      section.classList.toggle('hidden', specialRoute && section !== projectSection);
     });
 
     const portfolioHeader = document.getElementById('portfolio-projects-header');
     const portfolioFilters = document.getElementById('portfolio-project-filters');
     const assetsHeader = document.getElementById('assets-page-header');
-    if (portfolioHeader) portfolioHeader.classList.toggle('hidden', assetsRoute);
-    if (portfolioFilters) portfolioFilters.classList.toggle('hidden', assetsRoute);
+    const moreHeader = document.getElementById('more-page-header');
+    if (portfolioHeader) portfolioHeader.classList.toggle('hidden', specialRoute);
+    if (portfolioFilters) portfolioFilters.classList.toggle('hidden', specialRoute);
     if (assetsHeader) assetsHeader.classList.toggle('hidden', !assetsRoute);
+    if (moreHeader) moreHeader.classList.toggle('hidden', !moreRoute);
 
     document.querySelectorAll('a[href="./assets/"], a[href="../assets/"]').forEach(function (link) {
       link.href = '?assets';
@@ -1643,9 +1661,28 @@
         initElyDevMotionEnhancements();
         initAssetCardInteractions();
       });
-    } else {
-      selectedOrigin = 'todos';
+    } else if (moreRoute) {
+      selectedOrigin = 'more';
       selectedCategory = 'todos';
+      searchQuery = '';
+      const searchInput = document.getElementById('projects-search-input');
+      if (searchInput) searchInput.value = '';
+      renderProjectsGrid(true);
+    } else {
+      // En la página principal no reiniciamos el filtro al refrescar datos, volver a la pestaña o restaurar la página.
+      // El estado seleccionado por el visitante debe mantenerse mientras se actualizan los datos de Sheets.
+      const validOrigins = ['todos', 'propio', 'trabajado', 'servicios', 'clases', 'more'];
+      if (!validOrigins.includes(selectedOrigin)) selectedOrigin = 'todos';
+      if (!selectedCategory) selectedCategory = 'todos';
+
+      document.querySelectorAll('[data-origin-filter]').forEach(function (button) {
+        const active = button.getAttribute('data-origin-filter') === selectedOrigin;
+        button.classList.toggle('bg-amber-400', active);
+        button.classList.toggle('text-black', active);
+        button.classList.toggle('font-bold', active);
+        button.classList.toggle('bg-[#141822]', !active);
+        button.classList.toggle('text-slate-300', !active);
+      });
       renderProjectsGrid(true);
     }
   }
@@ -2347,7 +2384,9 @@
       }).join('');
       const cardEffectStyle = project.cardEffectColor ? ' style="--card-effect-color:' + project.cardEffectColor + ';--card-effect-soft:' + project.cardEffectColor + 'aa;--card-effect-light:' + project.cardEffectColor + ';"' : '';
       const pinnedBadge = project.pinned ? '<span class="card-pinned-badge">📌 Fijado</span>' : '';
-      const originBadge = isServ
+      const originBadge = project.origin === 'more'
+        ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">Sistema</span>'
+        : isServ
         ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Servicio Técnico</span>'
         : isClas
         ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Clase Privada</span>'
@@ -2548,6 +2587,38 @@
   }
 
   // 6. Modal de detalle del proyecto (Soporta 16:9, Múltiples Imágenes y Videos de YouTube en Grande)
+  function cardDirectLink(project) {
+    if (!project || !project.id) return window.location.origin + window.location.pathname;
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    url.searchParams.set('card', project.id);
+    return url.toString();
+  }
+
+  function copyProjectCardLink(projectId) {
+    const project = projects.find(function (p) { return String(p.id) === String(projectId); });
+    if (!project) return;
+    const link = cardDirectLink(project);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () {
+        showStatusNotification({ title: 'Enlace copiado', message: 'Enlace directo a "' + project.title + '".', type: 'success', icon: '🔗' });
+      }).catch(function () { window.prompt('Copia este enlace:', link); });
+    } else {
+      window.prompt('Copia este enlace:', link);
+    }
+  }
+
+  function applyCardQueryRoute() {
+    const params = new URLSearchParams(window.location.search || '');
+    const cardId = params.get('card');
+    if (!cardId) return false;
+    const target = projects.find(function (project) { return String(project.id) === String(cardId); });
+    if (!target) return false;
+    setTimeout(function () { openProjectModal(target.id, true); }, 0);
+    return true;
+  }
+
   function openProjectModal(projectId, skipRefresh) {
     // La información ya fue cargada al entrar. Abrimos inmediatamente con el estado actual.
     // Las actualizaciones de Sheets ocurren en segundo plano y no bloquean el click.
@@ -2555,9 +2626,17 @@
     if (!project) return;
     selectedProject = project;
     activeMediaIndex = 0;
+
+    if (!skipRefresh) {
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '';
+      url.searchParams.set('card', project.id);
+      history.replaceState(null, '', url.toString());
+    }
     
     // Si tiene video de YouTube configurado, activarlo por defecto o permitir alternar
-    activeMediaMode = (project.youtubeVideo && getYouTubeEmbedUrl(project.youtubeVideo)) ? 'video' : 'image';
+    activeMediaMode = (project.youtubeVideo && (getYouTubeEmbedUrl(project.youtubeVideo) || isLocalVideoMedia(project.youtubeVideo))) ? 'video' : 'image';
 
     const modal = document.getElementById('project-detail-modal');
     if (!modal) return;
@@ -2688,6 +2767,14 @@
       }
     }
 
+    const shareButton = document.getElementById('modal-project-share-btn');
+    if (shareButton) {
+      shareButton.onclick = function (event) {
+        event.stopPropagation();
+        copyProjectCardLink(project.id);
+      };
+    }
+
     // Botón de solicitar servicio / contactar
     const contactCta = document.getElementById('modal-project-contact-btn');
     if (contactCta) {
@@ -2708,7 +2795,10 @@
     const tabsContainer = document.getElementById('modal-media-tabs');
     const thumbsContainer = document.getElementById('modal-media-thumbs');
 
-    const embedUrl = getYouTubeEmbedUrl(selectedProject.youtubeVideo);
+    const videoSource = String(selectedProject.youtubeVideo || '').trim();
+    const embedUrl = getYouTubeEmbedUrl(videoSource);
+    const localVideo = !embedUrl && isLocalVideoMedia(videoSource);
+    const hasVideo = !!embedUrl || localVideo;
     
     // Lista de imágenes (incluye coverImage y galleryImages)
     let images = [];
@@ -2722,7 +2812,7 @@
 
     // Pestañas superiores (si tiene video y fotos a la vez)
     if (tabsContainer) {
-      if (embedUrl) {
+      if (hasVideo) {
         tabsContainer.innerHTML = `
           <div class="flex items-center gap-2 mb-2">
             <button
@@ -2730,7 +2820,7 @@
               onclick="window.ElyPortfolio.setModalMediaMode('video')"
               class="px-3 py-1 rounded-lg text-xs font-bold transition-all ${activeMediaMode === 'video' ? 'bg-red-600 text-white shadow' : 'bg-white/10 text-slate-300 hover:bg-white/20'}"
             >
-              ▶ Ver Video en Grande (YouTube)
+              ▶ Ver Video en Grande (${localVideo ? 'Local' : 'YouTube'})
             </button>
             <button
               type="button"
@@ -2750,8 +2840,13 @@
 
     // Contenido del visor (16:9)
     if (mediaContainer) {
-      if (activeMediaMode === 'video' && embedUrl) {
-        mediaContainer.innerHTML = `
+      if (activeMediaMode === 'video' && hasVideo) {
+        if (localVideo) {
+          mediaContainer.innerHTML = `
+            <div class="aspect-16-9 w-full rounded-xl overflow-hidden bg-black shadow-inner">
+              <video src="${videoSource}" title="${String(selectedProject.title || 'Video del proyecto').replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}" class="w-full h-full object-contain" controls playsinline preload="metadata"></video>
+            </div>`;
+        } else mediaContainer.innerHTML = `
           <div class="aspect-16-9 w-full rounded-xl overflow-hidden bg-black shadow-inner">
             <iframe
               src="${embedUrl}"
@@ -2873,6 +2968,13 @@
     // Detener reproducción de iframes al cerrar
     const mediaContainer = document.getElementById('modal-media-viewport');
     if (mediaContainer) mediaContainer.innerHTML = '';
+
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.has('card')) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('card');
+      history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
+    }
   }
 
   // 7. Navegación Anterior / Siguiente en Modal
@@ -3323,7 +3425,7 @@
     }
 
     try {
-      const url = GLOBAL_COUNTER_URL + '?action=loadSheetData&cacheBust=' + Date.now();
+      const url = GLOBAL_COUNTER_URL + '?action=loadSheetData&sheet=' + encodeURIComponent(sheetName) + '&cacheBust=' + Date.now();
       const response = await fetch(url, { cache: 'no-store' });
       if (!response.ok) throw new Error('Google Sheets HTTP ' + response.status);
       const result = await response.json();
@@ -3706,19 +3808,24 @@
     } catch (e) {}
   }
 
-  // 9. Modal de Contacto y Envío de Correo Directo desde la Web (FormSubmit AJAX + Fallback Mailto)
+  // 9. Modal de Contacto y Bandeja de Mensajes
+  const CONTACT_MESSAGES_SHEET_TYPE = 'contact_message';
+  const CONTACT_REQUEST_SHEET_NAME = 'ContactRequest';
+  const OWNER_EMAIL = 'eliezerterrero275@gmail.com';
+  let activeMessageReplyId = null;
+  let activeMessagesFilter = 'unread';
+  let backendContactSnapshot = [];
+  let backendContactSnapshotReady = false;
+
   function openContactModal(initialSubject) {
     const modal = document.getElementById('contact-modal');
     if (!modal) return;
     const subjInput = document.getElementById('contact-subject');
-    if (subjInput && initialSubject) {
-      subjInput.value = initialSubject;
-    }
+    if (subjInput) subjInput.value = initialSubject || '';
     const successMsg = document.getElementById('contact-success-msg');
     const errorMsg = document.getElementById('contact-error-msg');
     if (successMsg) successMsg.classList.add('hidden');
     if (errorMsg) errorMsg.classList.add('hidden');
-
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
@@ -3729,10 +3836,295 @@
     document.body.style.overflow = '';
   }
 
+  function formatMessageRelativeTime(timestamp) {
+    const value = Number(timestamp) || Date.parse(timestamp) || Date.now();
+    const diff = Math.max(0, Date.now() - value);
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const month = 30 * day;
+    const year = 365 * day;
+
+    if (diff < minute) return 'Hace unos segundos';
+    if (diff < hour) {
+      const minutes = Math.floor(diff / minute);
+      return 'Hace ' + minutes + ' ' + (minutes === 1 ? 'minuto' : 'minutos');
+    }
+    if (diff < day) {
+      const hours = Math.floor(diff / hour);
+      const minutes = Math.floor((diff % hour) / minute);
+      return 'Hace ' + hours + ' ' + (hours === 1 ? 'hora' : 'horas') + (minutes ? ' y ' + minutes + ' ' + (minutes === 1 ? 'minuto' : 'minutos') : '');
+    }
+    if (diff < month) {
+      const days = Math.floor(diff / day);
+      const minutes = Math.floor((diff % day) / minute);
+      return 'Hace ' + days + ' ' + (days === 1 ? 'día' : 'días') + (minutes ? ' y ' + minutes + ' ' + (minutes === 1 ? 'minuto' : 'minutos') : '');
+    }
+    if (diff < year) {
+      const months = Math.floor(diff / month);
+      const days = Math.floor((diff % month) / day);
+      return 'Hace ' + months + ' ' + (months === 1 ? 'mes' : 'meses') + (days ? ', ' + days + ' ' + (days === 1 ? 'día' : 'días') : '');
+    }
+    const years = Math.floor(diff / year);
+    const months = Math.floor((diff % year) / month);
+    return 'Hace ' + years + ' ' + (years === 1 ? 'año' : 'años') + (months ? ', ' + months + ' ' + (months === 1 ? 'mes' : 'meses') : '');
+  }
+
+  function getUnreadContactMessagesCount() {
+    return contactMessages.filter(function(item) {
+      return item && !item.read;
+    }).length;
+  }
+
+  function updateMessagesButtonBadge() {
+    const count = getUnreadContactMessagesCount();
+    const badge = document.getElementById('messages-unread-count');
+    if (badge) badge.textContent = String(count);
+    const modalCount = document.getElementById('messages-modal-count');
+    if (modalCount) modalCount.textContent = count + (count === 1 ? ' sin leer' : ' sin leer');
+  }
+
+  function renderMessagesModal() {
+    const listEl = document.getElementById('messages-list');
+    if (!listEl) return;
+    const sorted = contactMessages.slice().sort(function(a, b) {
+      return (Number(b.createdAt) || Date.parse(b.createdAt) || 0) - (Number(a.createdAt) || Date.parse(a.createdAt) || 0);
+    });
+    const unreadCount = contactMessages.filter(function(item) { return item && !item.read; }).length;
+    const readCount = contactMessages.filter(function(item) { return item && !!item.read; }).length;
+    const unreadTab = document.getElementById('messages-tab-unread');
+    const readTab = document.getElementById('messages-tab-read');
+    const unreadTabCount = document.getElementById('messages-unread-tab-count');
+    const readTabCount = document.getElementById('messages-read-tab-count');
+    if (unreadTabCount) unreadTabCount.textContent = String(unreadCount);
+    if (readTabCount) readTabCount.textContent = String(readCount);
+    if (unreadTab) {
+      unreadTab.setAttribute('aria-selected', String(activeMessagesFilter === 'unread'));
+      unreadTab.className = 'px-3 py-1.5 rounded-lg ' + (activeMessagesFilter === 'unread' ? 'bg-violet-400 text-black font-bold' : 'bg-white/5 border border-white/10 text-slate-300 font-semibold hover:bg-white/10') + ' text-[10px] transition-colors';
+    }
+    if (readTab) {
+      readTab.setAttribute('aria-selected', String(activeMessagesFilter === 'read'));
+      readTab.className = 'px-3 py-1.5 rounded-lg ' + (activeMessagesFilter === 'read' ? 'bg-violet-400 text-black font-bold' : 'bg-white/5 border border-white/10 text-slate-300 font-semibold hover:bg-white/10') + ' text-[10px] transition-colors';
+    }
+    const filtered = sorted.filter(function(item) {
+      return activeMessagesFilter === 'read' ? !!item.read : !item.read;
+    });
+    if (!sorted.length || !filtered.length) {
+      listEl.innerHTML = '<div class="rounded-xl border border-dashed border-white/10 p-6 text-center text-[10px] text-slate-500">' +
+        (!sorted.length ? 'No hay mensajes todavía.' : (activeMessagesFilter === 'read' ? 'No hay mensajes leídos.' : 'No hay mensajes sin leer.')) +
+        '</div>';
+      updateMessagesButtonBadge();
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(function(item) {
+      const id = String(item.id || '');
+      const safeId = escapeSocialAttr(id);
+      const name = escapeSocialText(item.name || 'Sin nombre');
+      const email = escapeSocialText(item.email || '');
+      const whatsapp = escapeSocialText(item.whatsapp || '');
+      const instagram = escapeSocialText(item.instagram || '');
+      const service = escapeSocialText(item.service || 'Consulta general');
+      const message = escapeSocialText(item.message || '');
+      const replies = Array.isArray(item.replies) ? item.replies : [];
+      const lastReply = replies.length ? replies[replies.length - 1] : null;
+      return '<article class="rounded-xl border ' + (item.read ? 'border-white/5 bg-white/[.025]' : 'border-violet-400/25 bg-violet-500/[.045]') + ' p-2.5 sm:p-3">' +
+        '<div class="flex flex-col sm:flex-row sm:items-start gap-2.5">' +
+          '<div class="min-w-0 flex-1">' +
+            '<div class="flex flex-wrap items-center gap-1.5">' +
+              '<span class="text-[11px] font-bold text-white">' + name + '</span>' +
+              (!item.read ? '<span class="px-1.5 py-0.5 rounded bg-violet-400 text-black text-[8px] font-black uppercase">Nuevo</span>' : '') +
+              '<span class="px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/15 text-amber-300 text-[8px] font-bold">' + service + '</span>' +
+            '</div>' +
+            '<div class="mt-1 text-[10px] text-slate-500 break-all">' + email +
+              (whatsapp ? ' · WhatsApp: ' + whatsapp : '') +
+              (instagram ? ' · Instagram: ' + instagram : '') +
+            '</div>' +
+            '<div class="mt-1.5 text-[11px] text-slate-300 leading-relaxed whitespace-pre-line">' + message + '</div>' +
+            (lastReply ? '<div class="mt-2 rounded-lg bg-cyan-400/5 border border-cyan-400/10 px-2 py-1.5 text-[9px] text-cyan-200"><span class="font-bold">Última respuesta:</span> ' + escapeSocialText(lastReply.body || '') + '</div>' : '') +
+          '</div>' +
+          '<div class="shrink-0 flex sm:flex-col items-end gap-1.5">' +
+            '<span class="text-[9px] text-slate-500 whitespace-nowrap">' + formatMessageRelativeTime(item.createdAt) + '</span>' +
+            '<div class="flex items-center gap-1">' +
+              '<button type="button" onclick="window.ElyPortfolio.toggleMessageRead(\'' + safeId + '\')" class="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 text-[9px] text-slate-300">' + (item.read ? 'No leído' : 'Leído') + '</button>' +
+              '<button type="button" onclick="window.ElyPortfolio.openMessageReply(\'' + safeId + '\')" class="px-2 py-1 rounded-md bg-cyan-400/10 border border-cyan-400/20 hover:bg-cyan-400/20 text-[9px] text-cyan-300 font-bold">Responder</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    updateMessagesButtonBadge();
+  }
+
+  function setMessagesFilter(filter) {
+    if (!isModerator || visitorPreviewMode) return;
+    activeMessagesFilter = filter === 'read' ? 'read' : 'unread';
+    closeMessageReply();
+    renderMessagesModal();
+  }
+
+  function openMessagesModal() {
+    if (!isModerator || visitorPreviewMode) return;
+    const modal = document.getElementById('messages-modal');
+    if (!modal) return;
+    closeMessageReply();
+    renderMessagesModal();
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMessagesModal() {
+    const modal = document.getElementById('messages-modal');
+    if (modal) modal.classList.add('hidden');
+    closeMessageReply();
+    document.body.style.overflow = '';
+  }
+
+  async function syncContactMessagesImmediately(explicitRecord) {
+    return queueBackendSync(async function () {
+      const localRecords = contactMessages.filter(function (item) {
+        return item && item.id;
+      }).map(function (item) {
+        return { id: String(item.id), type: CONTACT_MESSAGES_SHEET_TYPE, data: item };
+      });
+      const target = explicitRecord && explicitRecord.id
+        ? [{ id: String(explicitRecord.id), type: CONTACT_MESSAGES_SHEET_TYPE, data: explicitRecord }]
+        : null;
+      const result = await syncOnlyChangedRecords(
+        CONTACT_REQUEST_SHEET_NAME,
+        localRecords,
+        backendContactSnapshot,
+        backendContactSnapshotReady,
+        target
+      );
+      backendContactSnapshot = cloneBackendRecords(result.records);
+      backendContactSnapshotReady = true;
+      return result;
+    });
+  }
+
+  async function saveContactMessage(message) {
+    if (!message || !message.id) return false;
+    const existingIndex = contactMessages.findIndex(function(item) { return String(item.id) === String(message.id); });
+    if (existingIndex >= 0) contactMessages[existingIndex] = message;
+    else contactMessages.push(message);
+    try { localStorage.setItem('portfolio_contact_messages_v1', JSON.stringify(contactMessages)); } catch (e) {}
+    try {
+      await syncContactMessagesImmediately(message);
+      return true;
+    } catch (error) {
+      console.error('[CONTACT MESSAGE SAVE ERROR]', error);
+      return false;
+    }
+  }
+
+  async function toggleMessageRead(messageId) {
+    if (!isModerator) return;
+    const item = contactMessages.find(function(message) { return String(message.id) === String(messageId); });
+    if (!item) return;
+    item.read = !item.read;
+    await saveContactMessage(item);
+    renderMessagesModal();
+  }
+
+  function openMessageReply(messageId) {
+    if (!isModerator) return;
+    const item = contactMessages.find(function(message) { return String(message.id) === String(messageId); });
+    if (!item) return;
+    activeMessageReplyId = String(item.id);
+    const panel = document.getElementById('message-reply-panel');
+    const recipient = document.getElementById('message-reply-recipient');
+    const textarea = document.getElementById('message-reply-text');
+    const status = document.getElementById('message-reply-status');
+    if (recipient) recipient.textContent = (item.name || 'Visitante') + ' · ' + (item.email || '');
+    if (textarea) textarea.value = '';
+    if (status) {
+      status.className = 'hidden text-[10px] leading-relaxed';
+      status.textContent = '';
+    }
+    if (panel) panel.classList.remove('hidden');
+    if (textarea) {
+      textarea.focus();
+      panel && panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function closeMessageReply() {
+    activeMessageReplyId = null;
+    const panel = document.getElementById('message-reply-panel');
+    if (panel) panel.classList.add('hidden');
+  }
+
+  async function sendMessageReply() {
+    if (!isModerator || !activeMessageReplyId) return;
+    const item = contactMessages.find(function(message) { return String(message.id) === String(activeMessageReplyId); });
+    const textarea = document.getElementById('message-reply-text');
+    const button = document.getElementById('message-reply-send-btn');
+    const status = document.getElementById('message-reply-status');
+    const body = textarea ? textarea.value.trim() : '';
+    if (!item || !item.email || !body) return;
+
+    if (button) {
+      button.disabled = true;
+      button.classList.add('opacity-80', 'cursor-wait');
+      button.innerHTML = '<span class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-black/25 border-t-black"></span><span>Enviando...</span>';
+    }
+    if (status) {
+      status.className = 'text-[10px] text-cyan-300 flex items-center gap-1.5';
+      status.innerHTML = '<span class="inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-cyan-300/30 border-t-cyan-300"></span><span>Enviando respuesta...</span>';
+    }
+
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(item.email), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          Nombre: 'Eliezer Terrero (ElyDev)',
+          Correo: OWNER_EMAIL,
+          Mensaje: body,
+          _subject: 'Re: ' + (item.service || 'Consulta desde Portafolio ElyDev'),
+          _replyto: OWNER_EMAIL,
+          _template: 'table'
+        })
+      });
+      const result = await response.json().catch(function() { return {}; });
+      if (!response.ok || !(result.success === 'true' || result.success === true || result.message)) {
+        throw new Error(result.message || 'No se pudo enviar la respuesta.');
+      }
+
+      if (!Array.isArray(item.replies)) item.replies = [];
+      item.replies.push({ body: body, sentAt: Date.now() });
+      item.read = true;
+      const saved = await saveContactMessage(item);
+      if (!saved) throw new Error('El correo se envió, pero no se pudo guardar la respuesta en Google Sheets.');
+      if (status) {
+        status.className = 'text-[10px] text-emerald-300';
+        status.textContent = '✓ Respuesta enviada y guardada.';
+      }
+      if (textarea) textarea.value = '';
+      renderMessagesModal();
+    } catch (error) {
+      console.error('[CONTACT REPLY ERROR]', error);
+      if (status) {
+        status.className = 'text-[10px] text-red-300';
+        status.textContent = 'No se pudo enviar: ' + (error.message || 'Error desconocido.');
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.classList.remove('opacity-80', 'cursor-wait');
+        button.innerHTML = 'Enviar respuesta ✉';
+      }
+    }
+  }
+
   async function handleContactSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('contact-name').value.trim();
     const email = document.getElementById('contact-email').value.trim();
+    const whatsapp = (document.getElementById('contact-whatsapp')?.value || '').trim();
+    const instagram = (document.getElementById('contact-instagram')?.value || '').trim();
     const subject = document.getElementById('contact-subject').value.trim();
     const message = document.getElementById('contact-message').value.trim();
     const submitBtn = document.getElementById('contact-submit-btn');
@@ -3744,64 +4136,79 @@
       return;
     }
 
-    // Estado cargando en el botón
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span>Enviando mensaje... ⏳</span>';
+      submitBtn.classList.add('opacity-80', 'cursor-wait');
+      submitBtn.innerHTML = '<span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/25 border-t-black"></span><span>Enviando mensaje...</span>';
     }
     if (successMsg) successMsg.classList.add('hidden');
     if (errorMsg) errorMsg.classList.add('hidden');
 
+    const contactMessage = {
+      id: 'contact-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      name: name,
+      email: email,
+      whatsapp: whatsapp,
+      instagram: instagram,
+      service: subject || 'Consulta general',
+      message: message,
+      createdAt: Date.now(),
+      read: false,
+      replies: []
+    };
+
+    let savedToSheet = false;
     try {
-      // 1. Envío AJAX directo sin recargar página (FormSubmit API hacia el correo de Eliezer)
-      const response = await fetch('https://formsubmit.co/ajax/eliezerterrero275@gmail.com', {
+      savedToSheet = await saveContactMessage(contactMessage);
+    } catch (error) {
+      console.error('[CONTACT MESSAGE PERSIST ERROR]', error);
+    }
+
+    let emailSent = false;
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/' + OWNER_EMAIL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           Nombre: name,
           Correo: email,
-          Asunto: subject || 'Consulta desde Portafolio ElyDev',
+          WhatsApp: whatsapp || 'No proporcionado',
+          Instagram: instagram || 'No proporcionado',
+          Servicio: subject || 'Consulta general',
           Mensaje: message,
           _subject: '[Portafolio ElyDev] ' + (subject || 'Nuevo Mensaje de Contacto'),
+          _replyto: email,
           _template: 'table'
         })
       });
+      const result = await response.json().catch(function() { return {}; });
+      emailSent = response.ok && (result.success === 'true' || result.success === true || result.message);
+      if (!emailSent) throw new Error(result.message || 'FormSubmit rechazó el envío.');
+    } catch (error) {
+      console.warn('[CONTACT EMAIL ERROR]', error);
+    }
 
-      const result = await response.json();
-
-      if (response.ok && (result.success === 'true' || result.success === true || result.message)) {
-        if (successMsg) {
-          successMsg.innerHTML = '✓ ¡Mensaje enviado con éxito directamente a Eliezer Terrero! Recibirás respuesta pronto a tu correo.';
-          successMsg.classList.remove('hidden');
-        }
-        document.getElementById('contact-form').reset();
-        setTimeout(function () {
-          closeContactModal();
-        }, 3000);
-      } else {
-        throw new Error(result.message || 'Error al enviar');
-      }
-    } catch (err) {
-      console.warn('Fallo envío AJAX, intentando vía mailto o contact.php...', err);
-      // Fallback automático para que el mensaje NUNCA se pierda
-      const mailto = `mailto:eliezerterrero275@gmail.com?subject=${encodeURIComponent(subject || 'Consulta Portafolio ElyDev')}&body=${encodeURIComponent('De: ' + name + ' (' + email + ')\n\n' + message)}`;
-      window.location.href = mailto;
-
+    if (emailSent || savedToSheet) {
       if (successMsg) {
-        successMsg.innerHTML = '✓ Abriendo tu gestor de correo para enviar mensaje a eliezerterrero275@gmail.com...';
+        successMsg.innerHTML = emailSent
+          ? '✓ Mensaje enviado. Tu solicitud quedó registrada y podrás recibir respuesta por correo.'
+          : '✓ Tu solicitud quedó registrada. El correo de notificación no pudo enviarse, pero el mensaje no se perdió.';
         successMsg.classList.remove('hidden');
       }
-      setTimeout(function () {
-        closeContactModal();
-      }, 3000);
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>Enviar Mensaje</span>';
+      const form = document.getElementById('contact-form');
+      if (form) form.reset();
+      setTimeout(function() { closeContactModal(); }, 2500);
+    } else {
+      if (errorMsg) {
+        errorMsg.textContent = 'No se pudo guardar ni enviar el mensaje. Inténtalo nuevamente.';
+        errorMsg.classList.remove('hidden');
       }
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-80', 'cursor-wait');
+      submitBtn.innerHTML = '<span>Enviar Mensaje</span>';
     }
   }
 
@@ -3908,6 +4315,10 @@
     renderExperiences();
     renderTestimonialsPreview();
     renderSatisfiedClientsModalList();
+    updateMessagesButtonBadge();
+    if (document.getElementById('messages-modal') && !document.getElementById('messages-modal').classList.contains('hidden')) {
+      renderMessagesModal();
+    }
   }
 
   // 12. Reordenar Proyectos (Subir o Bajar orden)
@@ -4078,7 +4489,7 @@
     const iconInp = document.getElementById('edit-proj-icon');
     if (iconInp) iconInp.value = savedIcon;
     const coverPrev = document.getElementById('edit-proj-cover-preview');
-    if (coverPrev) setMediaPreviewElement(coverPrev, project.coverImage || './assets/images/ely/overdrivers-teaser.jpg', project.title || 'Portada');
+    if (coverPrev) setMediaPreviewElement(coverPrev, project.coverImage || './assets/images/ely/Proyectos/Overdrivers/od1.jpg', project.title || 'Portada');
     renderGalleryThumbnails('edit-proj-gallery-thumbs', 'edit-proj-gallery');
 
     // Video de YouTube en grande
@@ -4708,7 +5119,7 @@
   }
 
   async function loadCurrentSheetRecords(sheetName, force) {
-    const key = sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : 'cards';
+    const key = sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : (sheetName === CONTACT_REQUEST_SHEET_NAME ? 'contactRequests' : 'cards');
     const now = Date.now();
     if (!force && sheetsRemoteCache[key] && now - (sheetsRemoteCacheAt[key] || 0) < SHEETS_REMOTE_CACHE_MS) {
       return cloneBackendRecords(sheetsRemoteCache[key]);
@@ -4722,7 +5133,7 @@
       throw new Error(result && result.error ? result.error : 'Google Sheets no devolvió datos.');
     }
 
-    const records = Array.isArray(result[key]) ? result[key] : [];
+    const records = Array.isArray(result[key]) ? result[key] : (sheetName === CONTACT_REQUEST_SHEET_NAME ? (Array.isArray(result.contactRequests) ? result.contactRequests : (Array.isArray(result.records) ? result.records : [])) : []);
     sheetsRemoteCache[key] = cloneBackendRecords(records);
     sheetsRemoteCacheAt[key] = Date.now();
     return records;
@@ -4812,8 +5223,8 @@
     await waitForSheetsWriteSlot();
     await syncDataToGoogleSheet(sheetName, merged);
     sheetsLastWriteAt = Date.now();
-    sheetsRemoteCache[sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : 'cards'] = cloneBackendRecords(merged);
-    sheetsRemoteCacheAt[sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : 'cards'] = Date.now();
+    sheetsRemoteCache[sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : (sheetName === CONTACT_REQUEST_SHEET_NAME ? 'contactRequests' : 'cards')] = cloneBackendRecords(merged);
+    sheetsRemoteCacheAt[sheetName === FEEDBACKS_SHEET_NAME ? 'feedbacks' : (sheetName === CONTACT_REQUEST_SHEET_NAME ? 'contactRequests' : 'cards')] = Date.now();
     return { changed: changes.length + deletedIds.length, records: merged };
   }
 
@@ -5042,7 +5453,6 @@
     let token = '';
     try { token = localStorage.getItem(GITHUB_TOKEN_STORAGE_KEY) || ''; } catch (e) {}
     if (!token && window.ELY_GITHUB_TOKEN) token = window.ELY_GITHUB_TOKEN;
-    if (!token) token = prompt('GitHub API Token:');
     if (token) {
       try { localStorage.setItem(GITHUB_TOKEN_STORAGE_KEY, token.trim()); } catch (e) {}
       return token.trim();
@@ -5250,14 +5660,56 @@
     document.body.style.overflow = '';
   }
 
+  async function compressBackupToBase64(value) {
+    if (typeof CompressionStream !== 'function') {
+      throw new Error('Este navegador no soporta compresión GZIP. Actualiza el navegador para guardar backups comprimidos.');
+    }
+    const bytes = new TextEncoder().encode(JSON.stringify(value));
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'));
+    const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < compressed.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, compressed.subarray(i, i + chunkSize));
+    }
+    return {
+      data: btoa(binary),
+      originalBytes: bytes.length,
+      compressedBytes: compressed.length
+    };
+  }
+
   async function saveSheetsBackup() {
     try {
-      showStatusNotification({title:'Creando backup',message:'Leyendo CardsInfo y Feedbacks desde Google Sheets...',type:'info',icon:'⏳',duration:15000});
+      showStatusNotification({
+        title:'Creando backup',
+        message:'Leyendo CardsInfo y Feedbacks desde Google Sheets...',
+        type:'info',
+        icon:'⏳',
+        duration:15000
+      });
+
       await backendSyncQueue.catch(function () {});
-      const response = await fetch(GLOBAL_COUNTER_URL + '?action=loadSheetData&cacheBust=' + Date.now(), {cache:'no-store'});
-      if (!response.ok) throw new Error('Google Sheets HTTP ' + response.status);
+
+      const response = await fetch(
+        GLOBAL_COUNTER_URL + '?action=loadSheetData&cacheBust=' + Date.now(),
+        {cache:'no-store'}
+      );
+
+      if (!response.ok) {
+        throw new Error('Google Sheets HTTP ' + response.status);
+      }
+
       const result = await response.json();
-      if (!result || !result.success) throw new Error(result && result.error ? result.error : 'Google Sheets no devolvió datos.');
+
+      if (!result || !result.success) {
+        throw new Error(
+          result && result.error
+            ? result.error
+            : 'Google Sheets no devolvió datos.'
+        );
+      }
+
       const backup = {
         version: 1,
         createdAt: new Date().toISOString(),
@@ -5265,65 +5717,160 @@
         cards: Array.isArray(result.cards) ? result.cards : [],
         feedbacks: Array.isArray(result.feedbacks) ? result.feedbacks : []
       };
-      const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'elydev-sheets-backup-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showStatusNotification({title:'Backup guardado',message:'Se descargó una copia completa de CardsInfo y Feedbacks desde Google Sheets.',type:'success',icon:'💾'});
+
+      const compressed = await compressBackupToBase64(backup);
+      const body = new URLSearchParams();
+      body.set('action', 'saveBackup');
+      body.set('encoding', 'gzip-base64');
+      body.set('payload', compressed.data);
+
+      const saveResponse = await fetch(
+        GLOBAL_COUNTER_URL,
+        {
+          method:'POST',
+          body:body,
+          cache:'no-store'
+        }
+      );
+
+      const saveResult = await saveResponse.json().catch(function () {
+        return null;
+      });
+
+      if (!saveResponse.ok || !saveResult || !saveResult.success) {
+        throw new Error(
+          saveResult && saveResult.error
+            ? saveResult.error
+            : 'Google Sheets no pudo guardar el backup.'
+        );
+      }
+
+      showStatusNotification({
+        title:'Backup guardado',
+        message:'Backup comprimido guardado en la hoja Backup (' + Math.round((1 - compressed.compressedBytes / Math.max(1, compressed.originalBytes)) * 100) + '% menos datos).',
+        type:'success',
+        icon:'💾'
+      });
+
     } catch (error) {
       console.error('[SHEETS BACKUP SAVE ERROR]',error);
-      showStatusNotification({title:'Error al crear backup',message:error.message || 'No se pudo leer Google Sheets.',type:'error',icon:'⚠️'});
+      showStatusNotification({
+        title:'Error al crear backup',
+        message:error.message || 'No se pudo guardar el backup.',
+        type:'error',
+        icon:'⚠️'
+      });
     }
   }
 
-  function loadSheetsBackup() {
-    const input = document.getElementById('sheets-backup-file-input');
-    if (!input) return;
-    input.value = '';
-    input.click();
-  }
-
-  async function handleSheetsBackupFile(file) {
-    if (!file) return;
+  async function loadSheetsBackup() {
     try {
-      const backup = JSON.parse(await file.text());
-      const cards = Array.isArray(backup.cards) ? backup.cards : null;
-      const feedbacks = Array.isArray(backup.feedbacks) ? backup.feedbacks : null;
-      if (!cards || !feedbacks) throw new Error('El backup no contiene las listas "cards" y "feedbacks".');
       const confirmed = await new Promise(function(resolve) {
-        showConfirmModal('Restaurar backup','Esto reemplazará CardsInfo y Feedbacks en Google Sheets con el contenido del archivo seleccionado.','⚠️','Sí, Restaurar');
-        const actionBtn=document.getElementById('confirm-modal-action-btn');
-        const cancelBtn=document.getElementById('confirm-modal-cancel-btn');
-        const onAction=function(){cleanup(true);};
-        const onCancel=function(){cleanup(false);};
-        const cleanup=function(value){
-          if(actionBtn) actionBtn.removeEventListener('click',onAction);
-          if(cancelBtn) cancelBtn.removeEventListener('click',onCancel);
+        showConfirmModal(
+          'Cargar último backup',
+          'Esto reemplazará CardsInfo y Feedbacks con el último backup guardado en la hoja Backup.',
+          '⚠️',
+          'Sí, Restaurar'
+        );
+
+        const actionBtn = document.getElementById('confirm-modal-action-btn');
+        const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+        const onAction = function() {
+          cleanup(true);
+        };
+
+        const onCancel = function() {
+          cleanup(false);
+        };
+
+        const cleanup = function(value) {
+          if (actionBtn) actionBtn.removeEventListener('click',onAction);
+          if (cancelBtn) cancelBtn.removeEventListener('click',onCancel);
           closeConfirmModal();
           resolve(value);
         };
-        if(actionBtn) actionBtn.addEventListener('click',onAction);
-        if(cancelBtn) cancelBtn.addEventListener('click',onCancel);
+
+        if (actionBtn) actionBtn.addEventListener('click',onAction);
+        if (cancelBtn) cancelBtn.addEventListener('click',onCancel);
       });
+
       if (!confirmed) return;
-      showStatusNotification({title:'Restaurando backup',message:'Subiendo CardsInfo y Feedbacks a Google Sheets...',type:'info',icon:'⏳',duration:15000});
+
+      showStatusNotification({
+        title:'Cargando backup',
+        message:'Buscando el último backup guardado en Google Sheets...',
+        type:'info',
+        icon:'⏳',
+        duration:15000
+      });
+
+      const response = await fetch(
+        GLOBAL_COUNTER_URL + '?action=loadBackup&cacheBust=' + Date.now(),
+        {cache:'no-store'}
+      );
+
+      if (!response.ok) {
+        throw new Error('Google Sheets HTTP ' + response.status);
+      }
+
+      const result = await response.json();
+
+      if (!result || !result.success) {
+        throw new Error(
+          result && result.error
+            ? result.error
+            : 'No se encontró ningún backup.'
+        );
+      }
+
+      const backup = result.backup;
+
+      if (!backup) {
+        throw new Error('El último backup no contiene datos.');
+      }
+
+      const cards = Array.isArray(backup.cards) ? backup.cards : null;
+      const feedbacks = Array.isArray(backup.feedbacks) ? backup.feedbacks : null;
+
+      if (!cards || !feedbacks) {
+        throw new Error(
+          'El backup no contiene las listas "cards" y "feedbacks".'
+        );
+      }
+
+      showStatusNotification({
+        title:'Restaurando backup',
+        message:'Restaurando el backup del ' + new Date(result.createdAt).toLocaleString() + '...',
+        type:'info',
+        icon:'⏳',
+        duration:15000
+      });
+
       await queueBackendSync(async function() {
         await syncDataToGoogleSheet(CARDS_INFO_SHEET_NAME,cards);
         await syncDataToGoogleSheet(FEEDBACKS_SHEET_NAME,feedbacks);
       });
-      showStatusNotification({title:'Backup restaurado',message:'CardsInfo y Feedbacks fueron restaurados en Google Sheets.',type:'success',icon:'✓'});
-      await loadAllDataFromBackend();
+
+      showStatusNotification({
+        title:'Backup restaurado',
+        message:'Se cargó el último backup de la hoja Backup y se restauraron CardsInfo y Feedbacks.',
+        type:'success',
+        icon:'✓'
+      });
+
+      await loadAllDataFromBackend(true);
+
     } catch (error) {
       console.error('[SHEETS BACKUP LOAD ERROR]',error);
-      showStatusNotification({title:'Error al restaurar backup',message:error.message || 'No se pudo cargar el backup en Google Sheets.',type:'error',icon:'⚠️'});
+      showStatusNotification({
+        title:'Error al restaurar backup',
+        message:error.message || 'No se pudo cargar el backup desde Google Sheets.',
+        type:'error',
+        icon:'⚠️'
+      });
     }
   }
-
 
   let backendLoadPromise = null;
   let backendLastLoadAt = 0;
@@ -5353,6 +5900,14 @@
 
       const cards = Array.isArray(result.cards) ? result.cards : [];
       const feedbacks = Array.isArray(result.feedbacks) ? result.feedbacks : [];
+      let contactRequests = [];
+      try {
+        contactRequests = await loadCurrentSheetRecords(CONTACT_REQUEST_SHEET_NAME, true);
+      } catch (contactError) {
+        console.warn('[CONTACT REQUESTS LOAD ERROR]', contactError);
+      }
+      backendContactSnapshot = cloneBackendRecords(contactRequests);
+      backendContactSnapshotReady = true;
 
       // Snapshot confirmado de Sheets. Los guardados posteriores comparan contra
       // este estado y solo modifican los registros que realmente cambiaron.
@@ -5380,6 +5935,10 @@
 
       const codesFromSheet = cards
         .filter(function(record) { return record && record.type === 'feedback_code' && record.data; })
+        .map(function(record) { return record.data; });
+
+      const contactMessagesFromSheet = contactRequests
+        .filter(function(record) { return record && record.type === CONTACT_MESSAGES_SHEET_TYPE && record.data; })
         .map(function(record) { return record.data; });
 
       const skillCardsFromSheet = cards
@@ -5508,13 +6067,20 @@
       checkAssetHashParam();
 
       feedbackCodes = Array.isArray(codesFromSheet) ? codesFromSheet : [];
+      contactMessages = Array.isArray(contactMessagesFromSheet) ? contactMessagesFromSheet : [];
+      try { localStorage.setItem('portfolio_contact_messages_v1', JSON.stringify(contactMessages)); } catch (e) {}
+      updateMessagesButtonBadge();
+      if (document.getElementById('messages-modal') && !document.getElementById('messages-modal').classList.contains('hidden')) {
+        renderMessagesModal();
+      }
 
       return {
         projects: projectsFromSheet.length,
         experiences: experiencesFromSheet.length,
         feedbacks: feedbacksFromSheet.length,
         assets: assetsFromSheet.length,
-        feedbackCodes: codesFromSheet.length
+        feedbackCodes: codesFromSheet.length,
+        contactRequests: contactMessagesFromSheet.length
       };
     };
 
@@ -6359,6 +6925,13 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     openImageLibraryModal();
   }
 
+  function openVideoLibraryForInput(inputId) {
+    currentLibraryTarget = { type: 'video', inputId: inputId };
+    selectedLibraryFolder = '';
+    openImageLibraryModal();
+    renderLibraryGrid('');
+  }
+
   function openImageLibraryForGallery(thumbsContainerId, hiddenInputId) {
     selectedGalleryLibraryImages.clear();
     currentLibraryTarget = {
@@ -6428,6 +7001,14 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
         if (previewEl) setMediaPreviewElement(previewEl, imagePath, imageName || 'Vista previa');
       }
       showStatusNotification({ title: 'Imagen Asignada', message: 'Se asignó "' + (imageName || imagePath) + '" correctamente.', type: 'success', icon: '🖼️' });
+      closeImageLibraryModal();
+      return;
+    }
+    if (currentLibraryTarget.type === 'video') {
+      if (!isLocalVideoMedia(imagePath)) { showStatusNotification({ title: 'Selecciona un video', message: 'El archivo seleccionado no es un video compatible.', type: 'error', icon: '⚠️' }); return; }
+      const inputEl = document.getElementById(currentLibraryTarget.inputId);
+      if (inputEl) inputEl.value = imagePath;
+      showStatusNotification({ title: 'Video asignado', message: imageName || imagePath, type: 'success', icon: '▶️' });
       closeImageLibraryModal();
       return;
     }
@@ -7698,6 +8279,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
   window.addEventListener('pageshow', function (event) {
     applyAssetsRouteUI();
     applySocialQueryRoute();
+    applyCardQueryRoute();
     if (event.persisted) refreshCatalogFromSheet(true);
   });
 
@@ -7709,6 +8291,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
   window.addEventListener('popstate', function () {
     applyAssetsRouteUI();
     applySocialQueryRoute();
+    applyCardQueryRoute();
   });
 
   document.addEventListener('visibilitychange', function () {
@@ -7729,11 +8312,12 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
       return Promise.resolve();
     }
 
-    catalogRefreshPromise = loadAllDataFromBackend()
+    catalogRefreshPromise = loadAllDataFromBackend(shouldForce)
       .then(function () {
         catalogLastRefreshAt = Date.now();
         if (isAssetsPage()) refreshAssetsPageRuntime();
         else renderProjectsGrid(true);
+        applyCardQueryRoute();
       })
       .catch(function () {})
       .finally(function () {
@@ -7783,11 +8367,13 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
   document.addEventListener('DOMContentLoaded', function () {
     applyAssetsRouteUI();
     if (isAssetsPage()) selectedOrigin = 'assets';
+    else renderProjectsGrid(true);
     applyTheme(currentTheme);
     setupImageDropzones();
     renderSkillCards();
     Promise.resolve(refreshCatalogFromSheet(true)).finally(function () {
       renderSkillCards();
+      applyCardQueryRoute();
       refreshAllSocialNetworkCounts();
       startCatalogBackgroundRefresh();
     });
@@ -8190,6 +8776,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
       if (e.key === 'Escape') {
         closeProjectModal();
         closeContactModal();
+        closeMessagesModal();
         closeResumeModal();
         closeAuthModal();
         closeAddProjectModal();
@@ -8427,6 +9014,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     // Proyectos
     openProjectModal: openProjectModal,
     closeProjectModal: closeProjectModal,
+    copyProjectCardLink: copyProjectCardLink,
     navigateProjectModal: navigateProjectModal,
     setModalMediaMode: setModalMediaMode,
     selectModalImage: selectModalImage,
@@ -8503,6 +9091,14 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     showStatusNotification: showStatusNotification,
     openContactModal: openContactModal,
     closeContactModal: closeContactModal,
+    openMessagesModal: openMessagesModal,
+    setMessagesFilter: setMessagesFilter,
+    closeMessagesModal: closeMessagesModal,
+    renderMessagesModal: renderMessagesModal,
+    toggleMessageRead: toggleMessageRead,
+    openMessageReply: openMessageReply,
+    closeMessageReply: closeMessageReply,
+    sendMessageReply: sendMessageReply,
     openResumeModal: openResumeModal,
     closeResumeModal: closeResumeModal,
     openAuthModal: openAuthModal,
@@ -8521,6 +9117,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     moveCustomLibraryImageOrder: moveCustomLibraryImageOrder,
     moveCustomLibraryImageTo: moveCustomLibraryImageTo,
     openImageLibraryForInput: openImageLibraryForInput,
+    openVideoLibraryForInput: openVideoLibraryForInput,
     openImageLibraryForGallery: openImageLibraryForGallery,
     applySelectedGalleryLibraryImages: applySelectedGalleryLibraryImages,
     renderGalleryThumbnails: renderGalleryThumbnails,
