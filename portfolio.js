@@ -2636,7 +2636,7 @@
     }
     
     // Si tiene video de YouTube configurado, activarlo por defecto o permitir alternar
-    activeMediaMode = (project.youtubeVideo && getYouTubeEmbedUrl(project.youtubeVideo)) ? 'video' : 'image';
+    activeMediaMode = (project.youtubeVideo && (getYouTubeEmbedUrl(project.youtubeVideo) || isLocalVideoMedia(project.youtubeVideo))) ? 'video' : 'image';
 
     const modal = document.getElementById('project-detail-modal');
     if (!modal) return;
@@ -2795,7 +2795,10 @@
     const tabsContainer = document.getElementById('modal-media-tabs');
     const thumbsContainer = document.getElementById('modal-media-thumbs');
 
-    const embedUrl = getYouTubeEmbedUrl(selectedProject.youtubeVideo);
+    const videoSource = String(selectedProject.youtubeVideo || '').trim();
+    const embedUrl = getYouTubeEmbedUrl(videoSource);
+    const localVideo = !embedUrl && isLocalVideoMedia(videoSource);
+    const hasVideo = !!embedUrl || localVideo;
     
     // Lista de imágenes (incluye coverImage y galleryImages)
     let images = [];
@@ -2809,7 +2812,7 @@
 
     // Pestañas superiores (si tiene video y fotos a la vez)
     if (tabsContainer) {
-      if (embedUrl) {
+      if (hasVideo) {
         tabsContainer.innerHTML = `
           <div class="flex items-center gap-2 mb-2">
             <button
@@ -2817,7 +2820,7 @@
               onclick="window.ElyPortfolio.setModalMediaMode('video')"
               class="px-3 py-1 rounded-lg text-xs font-bold transition-all ${activeMediaMode === 'video' ? 'bg-red-600 text-white shadow' : 'bg-white/10 text-slate-300 hover:bg-white/20'}"
             >
-              ▶ Ver Video en Grande (YouTube)
+              ▶ Ver Video en Grande (${localVideo ? 'Local' : 'YouTube'})
             </button>
             <button
               type="button"
@@ -2837,8 +2840,13 @@
 
     // Contenido del visor (16:9)
     if (mediaContainer) {
-      if (activeMediaMode === 'video' && embedUrl) {
-        mediaContainer.innerHTML = `
+      if (activeMediaMode === 'video' && hasVideo) {
+        if (localVideo) {
+          mediaContainer.innerHTML = `
+            <div class="aspect-16-9 w-full rounded-xl overflow-hidden bg-black shadow-inner">
+              <video src="${videoSource}" title="${String(selectedProject.title || 'Video del proyecto').replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}" class="w-full h-full object-contain" controls playsinline preload="metadata"></video>
+            </div>`;
+        } else mediaContainer.innerHTML = `
           <div class="aspect-16-9 w-full rounded-xl overflow-hidden bg-black shadow-inner">
             <iframe
               src="${embedUrl}"
