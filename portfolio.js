@@ -6917,6 +6917,13 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     openImageLibraryModal();
   }
 
+  function openVideoLibraryForInput(inputId) {
+    currentLibraryTarget = { type: 'video', inputId: inputId };
+    selectedLibraryFolder = '';
+    openImageLibraryModal();
+    renderLibraryGrid('');
+  }
+
   function openImageLibraryForGallery(thumbsContainerId, hiddenInputId) {
     selectedGalleryLibraryImages.clear();
     currentLibraryTarget = {
@@ -6986,6 +6993,14 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
         if (previewEl) setMediaPreviewElement(previewEl, imagePath, imageName || 'Vista previa');
       }
       showStatusNotification({ title: 'Imagen Asignada', message: 'Se asignó "' + (imageName || imagePath) + '" correctamente.', type: 'success', icon: '🖼️' });
+      closeImageLibraryModal();
+      return;
+    }
+    if (currentLibraryTarget.type === 'video') {
+      if (!isLocalVideoMedia(imagePath)) { showStatusNotification({ title: 'Selecciona un video', message: 'El archivo seleccionado no es un video compatible.', type: 'error', icon: '⚠️' }); return; }
+      const inputEl = document.getElementById(currentLibraryTarget.inputId);
+      if (inputEl) inputEl.value = imagePath;
+      showStatusNotification({ title: 'Video asignado', message: imageName || imagePath, type: 'success', icon: '▶️' });
       closeImageLibraryModal();
       return;
     }
@@ -9094,6 +9109,7 @@ githubElyFolderPaths = Array.from(folderSet).sort(function(a,b) {
     moveCustomLibraryImageOrder: moveCustomLibraryImageOrder,
     moveCustomLibraryImageTo: moveCustomLibraryImageTo,
     openImageLibraryForInput: openImageLibraryForInput,
+    openVideoLibraryForInput: openVideoLibraryForInput,
     openImageLibraryForGallery: openImageLibraryForGallery,
     applySelectedGalleryLibraryImages: applySelectedGalleryLibraryImages,
     renderGalleryThumbnails: renderGalleryThumbnails,
