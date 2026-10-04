@@ -1438,9 +1438,12 @@
 
           <!-- Video de YouTube en Grande (16:9) -->
           <div>
-            <label class="block text-amber-400 mb-1 font-bold">▶ Enlace de Video de YouTube (Para mostrar en grande en el visor 16:9):</label>
-            <input id="edit-proj-video" type="url" placeholder="https://www.youtube.com/watch?v=PH6cK45nkto" class="w-full rounded-xl bg-[#0b0d11] border border-amber-400/40 px-3 py-2 text-white placeholder-slate-600" />
-            <span class="text-[11px] text-slate-500 block mt-0.5">Pega cualquier enlace de YouTube y se reproducirá directamente en la ficha sin salir de la página.</span>
+            <label class="block text-amber-400 mb-1 font-bold">▶ Enlace de Video de YouTube o video local (visor 16:9):</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input id="edit-proj-video" type="text" placeholder="https://www.youtube.com/watch?v=... o selecciona un video" class="flex-1 min-w-0 rounded-xl bg-[#0b0d11] border border-amber-400/40 px-3 py-2 text-white placeholder-slate-600" />
+              <button type="button" onclick="window.ElyPortfolio.openVideoLibraryForInput('edit-proj-video')" class="shrink-0 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 px-4 py-2 text-xs font-bold text-amber-300">▶ Biblioteca de videos</button>
+            </div>
+            <span class="text-[11px] text-slate-500 block mt-0.5">Acepta YouTube o un archivo MP4, WebM, MOV, M4V u OGV de la biblioteca. Los videos locales usan controles nativos y pantalla completa; la calidad depende de las versiones disponibles del archivo.</span>
           </div>
 
           <!-- Icono del Juego / Trabajo y Portada Principal (Con Drag & Drop y Biblioteca) -->
@@ -2474,7 +2477,7 @@
     </script>
 
     <!-- Script Principal NATIVO (Sin Node.js en tiempo de ejecución) -->
-    <script src="./portfolio.js?v=20261002-no-public-github-prompt1"></script>
+    <script src="./portfolio.js?v=20261003-local-video-library1"></script>
     <script src="./chat-live.js?v=20261003-livechat-fix1"></script>
 
     <!-- Compatibilidad de doble clic y Pinegrow: Fallback directo para rutas locales -->
